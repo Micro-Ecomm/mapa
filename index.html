@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Robo de Precos Suzano</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0F1923;color:#F7FAFB;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#1B5E20,#1A2634);border-bottom:1px solid rgba(76,175,80,.25);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:.7rem}
+.dot{width:10px;height:10px;background:#4CAF50;border-radius:50%;box-shadow:0 0 12px #4CAF50;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.logo-t{font-weight:800;font-size:1rem;letter-spacing:.04em}
+.logo-t span{color:#4CAF50}
+.badge{background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.3);color:#4CAF50;padding:.2rem .6rem;border-radius:4px;font-size:.7rem}
+main{padding:2rem;max-width:1400px;margin:0 auto}
+.sec{font-size:.65rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#8494A8;margin-bottom:1rem;margin-top:1.5rem}
+.search-box{background:#1A2634;border:1px solid #243040;border-radius:10px;padding:1.5rem;margin-bottom:2rem}
+.search-title{font-weight:700;font-size:.95rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.search-title .ico{color:#4CAF50}
+.search-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:.8rem}
+.search-grid2{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:.7rem;align-items:end}
+.field{display:flex;flex-direction:column;gap:.3rem}
+.field label{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8494A8}
+.field input,.field select{background:#243040;border:1px solid #374357;color:#F7FAFB;padding:.5rem .6rem;border-radius:6px;font-size:.8rem;outline:none;transition:border .2s}
+.field input:focus,.field select:focus{border-color:#4CAF50}
+.search-btn{background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;border:none;padding:.55rem 1.5rem;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;height:36px;white-space:nowrap}
+.search-btn:hover{box-shadow:0 2px 12px rgba(76,175,80,.3)}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem}
+.kpi{background:#1A2634;border:1px solid #243040;border-radius:10px;padding:1.1rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.cr::before{background:#C62828}.kpi.at::before{background:#F9A825}.kpi.al::before{background:#4CAF50}.kpi.va::before{background:#1565C0}.kpi.to::before{background:#8494A8}
+.kpi-l{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#8494A8;margin-bottom:.4rem}
+.kpi-v{font-size:2rem;font-weight:800;line-height:1}
+.kpi.cr .kpi-v{color:#C62828}.kpi.at .kpi-v{color:#F9A825}.kpi.va .kpi-v{color:#64B5F6}
+.kpi-s{font-size:.65rem;color:#8494A8;margin-top:.2rem}
+.grid{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;margin-bottom:2rem}
+.card{background:#1A2634;border:1px solid #243040;border-radius:10px;overflow:hidden}
+.card-h{padding:.8rem 1rem;border-bottom:1px solid #243040;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.card-t{font-weight:700;font-size:.85rem}
+.filters{display:flex;gap:.3rem}
+.fbtn{font-size:.58rem;padding:.2rem .5rem;border-radius:4px;border:1px solid #374357;background:transparent;color:#8494A8;cursor:pointer}
+.fbtn:hover,.fbtn.on{border-color:#4CAF50;color:#4CAF50;background:rgba(76,175,80,.1)}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:.52rem;letter-spacing:.06em;text-transform:uppercase;color:#8494A8;padding:.5rem .5rem;text-align:left;border-bottom:1px solid #243040;background:rgba(0,0,0,.15)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04)}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+td{padding:.5rem .5rem;font-size:.72rem;color:#C8D4E0}
+.pn{font-size:.72rem;color:#F7FAFB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.ps{font-size:.52rem;color:#8494A8;margin-top:.1rem}
+.mono{font-family:monospace;font-size:.72rem}
+.d.pos{color:#C62828}.d.neg{color:#64B5F6}.d.neu{color:#4CAF50}
+.f{display:inline-flex;align-items:center;gap:.2rem;padding:.12rem .35rem;border-radius:3px;font-size:.52rem;font-weight:500}
+.fd{width:5px;height:5px;border-radius:50%}
+.f.CRITICO{background:rgba(198,40,40,.15);color:#EF9A9A}.f.CRITICO .fd{background:#C62828;box-shadow:0 0 6px #C62828}
+.f.ATENCAO{background:rgba(249,168,37,.12);color:#FFE082}.f.ATENCAO .fd{background:#F9A825}
+.f.ALINHADO{background:rgba(76,175,80,.12);color:#A5D6A7}.f.ALINHADO .fd{background:#4CAF50}
+.f.VANTAGEM{background:rgba(21,101,192,.15);color:#90CAF9}.f.VANTAGEM .fd{background:#64B5F6}
+.link-conc{display:inline-flex;align-items:center;gap:.2rem;color:#4CAF50;text-decoration:none;font-size:.65rem;font-family:monospace}
+.link-conc:hover{color:#81C784;text-decoration:underline}
+.emb{font-family:monospace;font-size:.65rem;color:#FFE082}
+.emb-detalhe{font-size:.52rem;color:#8494A8;margin-top:.1rem}
+.faixa-tag{display:inline-block;font-size:.52rem;padding:.1rem .3rem;border-radius:3px;margin-right:.15rem;margin-bottom:.1rem;font-family:monospace}
+.faixa-tag.melhor{background:rgba(76,175,80,.15);color:#A5D6A7}
+.faixa-tag.normal{background:rgba(100,181,246,.1);color:#90CAF9}
+.reg-tag{display:inline-block;font-size:.52rem;padding:.1rem .35rem;border-radius:3px;font-family:monospace;letter-spacing:.04em}
+.reg-tag.brasil{background:rgba(76,175,80,.15);color:#A5D6A7}
+.reg-tag.sudeste{background:rgba(33,150,243,.15);color:#90CAF9}
+.reg-tag.nordeste{background:rgba(255,183,77,.15);color:#FFE082}
+.reg-tag.sul{background:rgba(149,117,205,.15);color:#CE93D8}
+.reg-tag.norte{background:rgba(77,182,172,.15);color:#80CBC4}
+.reg-tag.centro-oeste{background:rgba(240,98,146,.15);color:#F48FB1}
+.side{display:flex;flex-direction:column;gap:1rem}
+.pan{background:#1A2634;border:1px solid #243040;border-radius:10px;padding:1.1rem}
+.pan-t{font-weight:700;font-size:.82rem;margin-bottom:.8rem}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:.8rem;gap:2px}
+.seg{border-radius:3px}
+.leg{display:flex;flex-direction:column;gap:.45rem}
+.lr{display:flex;align-items:center;justify-content:space-between;font-size:.72rem}
+.ll{display:flex;align-items:center;gap:.4rem;color:#C8D4E0}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.lc{font-family:monospace;font-size:.68rem;color:#8494A8}
+.pr{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.7rem}
+.prl{display:flex;justify-content:space-between;font-size:.68rem;color:#8494A8}
+.prl strong{font-family:monospace;color:#F7FAFB;font-weight:500}
+.prt{height:5px;background:#243040;border-radius:3px;overflow:hidden}
+.prf{height:100%;border-radius:3px}
+.chart-card{background:#1A2634;border:1px solid #243040;border-radius:10px;padding:1.2rem;margin-bottom:2rem}
+.chart-title{font-weight:700;font-size:.9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.chart-container{position:relative;height:280px}
+.trends-section{margin-bottom:2rem}
+.trends-card{background:#1A2634;border:1px solid #243040;border-radius:10px;overflow:hidden}
+.trends-header{padding:.8rem 1rem;border-bottom:1px solid #243040}
+.trends-title{font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:.5rem}
+.trends-body{padding:1rem}
+.trends-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.trends-embed{background:#243040;border-radius:8px;overflow:hidden}
+.trends-label{font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:#8494A8;padding:.5rem .7rem;border-bottom:1px solid #374357}
+.trends-embed iframe{width:100%;height:280px;border:none}
+footer{border-top:1px solid #243040;padding:.8rem 2rem;display:flex;justify-content:space-between}
+footer span{font-size:.6rem;color:#8494A8}
+</style>
+</head>
+<body>
+<header>
+<div class="logo"><div class="dot"></div><span class="logo-t">ROBO DE PRECOS <span>SUZANO</span></span></div>
+<span class="badge" id="dt">CARREGANDO</span>
+</header>
+<main>
+
+<p class="sec">Busca de Produto Suzano</p>
+<div class="search-box">
+<div class="search-title"><span class="ico">&#128269;</span> Pesquisar Produto</div>
+<div class="search-grid">
+<div class="field"><label>Nome do Produto</label><input type="text" id="s-nome" placeholder="Ex: Report A4 75g"></div>
+<div class="field"><label>Formato</label><select id="s-fmt"><option value="a4">A4</option><option value="a3">A3</option><option value="oficio">Oficio</option></select></div>
+<div class="field"><label>Gramatura</label><select id="s-gram"><option value="75g">75g</option><option value="90g">90g</option><option value="80g">80g</option></select></div>
+<div class="field"><label>Cor</label><select id="s-cor"><option value="branco">Branco</option><option value="colorido">Colorido</option><option value="reciclado">Reciclado</option></select></div>
+</div>
+<div class="search-grid2">
+<div class="field"><label>Embalagem</label><select id="s-emb"><option value="todas">Todas</option><option value="resma">Resma (1 un)</option><option value="pacote">Pacote (2-4)</option><option value="caixa">Caixa (5+)</option></select></div>
+<div class="field"><label>Qtd Resmas</label><input type="number" id="s-qtd" placeholder="1" min="1" max="50" value="1"></div>
+<div class="field"><label>Regional</label><select id="s-reg"><option value="todas">Todas as Regioes</option><option value="Brasil">Brasil (Nacional)</option><option value="Sudeste">Sudeste</option><option value="Nordeste">Nordeste</option><option value="Sul">Sul</option><option value="Norte">Norte</option><option value="Centro-Oeste">Centro-Oeste</option></select></div>
+<div class="field"><label>Preco Suzano (R$/resma)</label><input type="text" id="s-preco" placeholder="32.50"></div>
+<button class="search-btn" onclick="pesquisar()">Buscar</button>
+</div>
+</div>
+
+<p class="sec">Visao Geral</p>
+<div class="kpi-grid" id="kg"></div>
+
+<div class="grid">
+<div class="card">
+<div class="card-h"><span class="card-t">Comparativo de Precos</span>
+<div class="filters">
+<button class="fbtn on" onclick="fil('TODOS')">Todos</button>
+<button class="fbtn" onclick="fil('CRITICO')">Critico</button>
+<button class="fbtn" onclick="fil('ATENCAO')">Atencao</button>
+<button class="fbtn" onclick="fil('VANTAGEM')">Vantagem</button>
+</div></div>
+<table><thead><tr><th>Produto</th><th>Embalagem</th><th>Faixas</th><th>Concorrente</th><th>Regional</th><th>R$/Resma</th><th>R$/Suzano</th><th>Dif %</th><th>Farol</th></tr></thead>
+<tbody id="tb"></tbody></table>
+</div>
+<div class="side">
+<div class="pan"><div class="pan-t">Distribuicao</div><div class="bar" id="br"></div><div class="leg" id="lg"></div></div>
+<div class="pan"><div class="pan-t">Preco Medio / Resma</div><div id="pc"></div></div>
+</div>
+</div>
+
+<p class="sec">Historico de Precos — Concorrentes</p>
+<div class="chart-card">
+<div class="chart-title">&#128200; Preco Medio por Resma (dia a dia)</div>
+<div class="chart-container"><canvas id="histChart"></canvas></div>
+</div>
+
+<p class="sec">Tendencias de Busca — Google Trends</p>
+<div class="trends-section">
+<div class="trends-card">
+<div class="trends-header"><span class="trends-title">&#128200; Interesse ao Longo do Tempo</span></div>
+<div class="trends-body">
+<div class="trends-grid">
+<div class="trends-embed">
+<div class="trends-label">Papel A4 vs Papel Sulfite (Brasil)</div>
+<script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/3975_RC01/embed_loader.js"></script>
+<script type="text/javascript">
+trends.embed.renderExploreWidget("TIMESERIES",{"comparisonItem":[{"keyword":"papel a4","geo":"BR","time":"today 12-m"},{"keyword":"papel sulfite","geo":"BR","time":"today 12-m"}],"category":0,"property":""},{"exploreQuery":"q=papel%20a4,papel%20sulfite&geo=BR&date=today%2012-m","guestPath":"https://trends.google.com.br:443/trends/embed/"});
+</script>
+</div>
+<div class="trends-embed">
+<div class="trends-label">Chamex vs Report vs HP Paper (Brasil)</div>
+<script type="text/javascript">
+trends.embed.renderExploreWidget("TIMESERIES",{"comparisonItem":[{"keyword":"chamex","geo":"BR","time":"today 12-m"},{"keyword":"papel report","geo":"BR","time":"today 12-m"},{"keyword":"hp paper","geo":"BR","time":"today 12-m"}],"category":0,"property":""},{"exploreQuery":"q=chamex,papel%20report,hp%20paper&geo=BR&date=today%2012-m","guestPath":"https://trends.google.com.br:443/trends/embed/"});
+</script>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</main>
+<footer><span>SUZANO - Market Intelligence - Paper Unit</span><span id="ft"></span></footer>
+
+<script>
+var D={"data_coleta": "2026-04-28", "kpis": {"total": 10, "critico": 2, "atencao": 2, "alinhado": 0, "vantagem": 6, "preco_medio_mercado": 29.81, "preco_medio_suzano": 30.7}, "produtos": [{"produto": "Papel sulfite A4 75g 210x297 caixa com 10 resmas 5000 folhas - Chamex", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 103.33, "preco_mercado": 10.33, "preco_suzano": 28.5, "diferenca": 175.9, "farol": "CRITICO", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-caixa-com-10-resmas-5000-folhas-chamex/5000135", "qtd_resmas": 10.0, "qtd_folhas": 5000.0}, {"produto": "Papel sulfite A4 75g 210x297 com 300 folhas - Chamex", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 21.83, "preco_mercado": 21.83, "preco_suzano": 28.5, "diferenca": 30.55, "farol": "CRITICO", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-com-300-folhas-chamex/05361", "qtd_resmas": 1.0, "qtd_folhas": 300.0}, {"produto": "Papel sulfite A4 75g 210x297 caixa com 10 resmas 5000 folhas - Chamex (Kit 5x)", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 278.0, "preco_mercado": 27.8, "preco_suzano": 28.5, "diferenca": 2.52, "farol": "ATENCAO", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-caixa-com-10-resmas-5000-folhas-chamex/5000135", "qtd_resmas": 10.0, "qtd_folhas": 5000.0}, {"produto": "Papel sulfite A4 75g 210x297 Caixa com 10 resmas 5000 Folhas - HP (Kit 5x)", "sku": "a4_75g_branco_hp", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 278.0, "preco_mercado": 27.8, "preco_suzano": 28.5, "diferenca": 2.52, "farol": "ATENCAO", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-caixa-com-10-resmas-5000-folhas-hp/5000150", "qtd_resmas": 10.0, "qtd_folhas": 5000.0}, {"produto": "Papel sulfite A4 75g 210x297 com 500 folhas - Chamex", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 28.9, "preco_mercado": 28.9, "preco_suzano": 28.5, "diferenca": -1.38, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-com-500-folhas-chamex/01083", "qtd_resmas": 1.0, "qtd_folhas": 500.0}, {"produto": "Papel sulfite A4 75g 210x297 com 500 folhas - HP", "sku": "a4_75g_branco_hp", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 28.9, "preco_mercado": 28.9, "preco_suzano": 28.5, "diferenca": -1.38, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-75g-210x297-com-500-folhas-hp/06821", "qtd_resmas": 1.0, "qtd_folhas": 500.0}, {"produto": "Kit 2 pacotes papel sulfite A4 75g 210x297 1000 folhas Chamex", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 59.0, "preco_mercado": 29.5, "preco_suzano": 28.5, "diferenca": -3.39, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/kit-2-pacotes-papel-sulfite-a4-75g-210x297-1000-folhas-chamex/5000232", "qtd_resmas": 2.0, "qtd_folhas": 1000.0}, {"produto": "Kit 2 pacotes papel sulfite A4 75g 210x297 1000 folhas Chamex (Kit 5x)", "sku": "a4_75g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 59.0, "preco_mercado": 29.5, "preco_suzano": 28.5, "diferenca": -3.39, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/kit-2-pacotes-papel-sulfite-a4-75g-210x297-1000-folhas-chamex/5000232", "qtd_resmas": 2.0, "qtd_folhas": 1000.0}, {"produto": "Papel sulfite A4 90g 210x297 com 500 folhas - Chamex", "sku": "a4_90g_branco_chamex", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 46.75, "preco_mercado": 46.75, "preco_suzano": 39.5, "diferenca": -15.51, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-90g-210x297-com-500-folhas-chamex/05380", "qtd_resmas": 1.0, "qtd_folhas": 500.0}, {"produto": "Papel sulfite A4 90g 210x297 com 500 fls - HP", "sku": "a4_90g_branco_hp", "concorrente": "lepok", "regional": "Nordeste", "preco_total": 46.75, "preco_mercado": 46.75, "preco_suzano": 39.5, "diferenca": -15.51, "farol": "VANTAGEM", "url": "https://www.lepok.com.br/produto/papel-sulfite-a4-90g-210x297-com-500-fls-hp/12156", "qtd_resmas": 1.0, "qtd_folhas": 500.0}], "concorrentes": [{"nome": "lepok", "produtos": 10, "ativo": true, "regional": "Nordeste"}], "historico": [{"data": "2026-04-28", "media": 29.81, "minimo": 10.33, "maximo": 46.75}]};
+var C={CRITICO:"#C62828",ATENCAO:"#F9A825",ALINHADO:"#4CAF50",VANTAGEM:"#1565C0"};
+var F="TODOS";
+var produtosAtivos=D.produtos.filter(function(p){return p.preco_mercado>=10});
+
+function tipoEmb(r){
+if(r>=5) return "caixa";
+if(r>=2) return "pacote";
+return "resma";
+}
+
+function init(){
+document.getElementById("dt").textContent="Coleta: "+D.data_coleta;
+document.getElementById("ft").textContent="Atualizado: "+D.data_coleta;
+atualizarKPIs(D.kpis);
+atualizarDist(D.kpis);
+atualizarPrecos(D.kpis);
+ren(produtosAtivos);
+renderHistorico();
+}
+
+function pesquisar(){
+var fmt=document.getElementById("s-fmt").value;
+var gram=document.getElementById("s-gram").value;
+var cor=document.getElementById("s-cor").value;
+var emb=document.getElementById("s-emb").value;
+var qtd=parseInt(document.getElementById("s-qtd").value)||1;
+var reg=document.getElementById("s-reg").value;
+var precoStr=document.getElementById("s-preco").value.replace(",",".");
+var preco=parseFloat(precoStr)||0;
+
+var filtrados=D.produtos.filter(function(p){
+if(p.preco_mercado<1) return false;
+if(p.sku.indexOf(fmt)<0) return false;
+if(p.sku.indexOf(gram)<0) return false;
+if(cor && p.sku.indexOf(cor)<0) return false;
+if(emb!=="todas"){
+var te=tipoEmb(p.qtd_resmas);
+if(te!==emb) return false;
+}
+if(qtd>1){
+if(Math.abs(p.qtd_resmas-qtd)>2) return false;
+}
+if(reg!=="todas"){
+if(p.regional!==reg) return false;
+}
+return true;
+});
+
+if(preco>0){
+filtrados=filtrados.map(function(p){
+var diff=((preco-p.preco_mercado)/p.preco_mercado*100);
+var farol=diff>=5?"CRITICO":diff>=1?"ATENCAO":diff<0?"VANTAGEM":"ALINHADO";
+return Object.assign({},p,{preco_suzano:preco,diferenca:Math.round(diff*100)/100,farol:farol});
+});
+}
+
+produtosAtivos=filtrados;
+var kpis={
+total:filtrados.length,
+critico:filtrados.filter(function(p){return p.farol==="CRITICO"}).length,
+atencao:filtrados.filter(function(p){return p.farol==="ATENCAO"}).length,
+alinhado:filtrados.filter(function(p){return p.farol==="ALINHADO"}).length,
+vantagem:filtrados.filter(function(p){return p.farol==="VANTAGEM"}).length,
+preco_medio_mercado:filtrados.length?Math.round(filtrados.reduce(function(s,p){return s+p.preco_mercado},0)/filtrados.length*100)/100:0,
+preco_medio_suzano:preco||0
+};
+atualizarKPIs(kpis);
+atualizarDist(kpis);
+atualizarPrecos(kpis);
+F="TODOS";
+document.querySelectorAll(".fbtn").forEach(function(b){b.classList.remove("on")});
+document.querySelector(".fbtn").classList.add("on");
+ren(filtrados);
+}
+
+function atualizarKPIs(k){
+document.getElementById("kg").innerHTML=
+'<div class="kpi to"><div class="kpi-l">TOTAL</div><div class="kpi-v">'+k.total+'</div><div class="kpi-s">com match</div></div>'+
+'<div class="kpi cr"><div class="kpi-l">CRITICO</div><div class="kpi-v">'+k.critico+'</div><div class="kpi-s">&ge;5% acima</div></div>'+
+'<div class="kpi at"><div class="kpi-l">ATENCAO</div><div class="kpi-v">'+k.atencao+'</div><div class="kpi-s">1-5% acima</div></div>'+
+'<div class="kpi al"><div class="kpi-l">ALINHADO</div><div class="kpi-v">'+k.alinhado+'</div><div class="kpi-s">na faixa</div></div>'+
+'<div class="kpi va"><div class="kpi-l">VANTAGEM</div><div class="kpi-v">'+k.vantagem+'</div><div class="kpi-s">abaixo</div></div>';
+}
+
+function atualizarDist(k){
+var s=[{k:"CRITICO",v:k.critico,l:"Critico"},{k:"ATENCAO",v:k.atencao,l:"Atencao"},{k:"ALINHADO",v:k.alinhado,l:"Alinhado"},{k:"VANTAGEM",v:k.vantagem,l:"Vantagem"}];
+document.getElementById("br").innerHTML=s.map(function(x){return '<div class="seg" style="flex:'+x.v+';background:'+C[x.k]+'"></div>'}).join("");
+document.getElementById("lg").innerHTML=s.map(function(x){return '<div class="lr"><span class="ll"><span class="ld" style="background:'+C[x.k]+'"></span>'+x.l+'</span><span class="lc">'+x.v+'</span></div>'}).join("");
+}
+
+function atualizarPrecos(k){
+var mx=Math.max(k.preco_medio_mercado,k.preco_medio_suzano)*1.1||1;
+document.getElementById("pc").innerHTML=
+'<div class="pr"><div class="prl"><span>Mercado</span><strong>R$ '+(k.preco_medio_mercado||0).toFixed(2).replace(".",",")+'</strong></div><div class="prt"><div class="prf" style="width:'+(k.preco_medio_mercado/mx*100).toFixed(1)+'%;background:#64B5F6"></div></div></div>'+
+'<div class="pr"><div class="prl"><span>Suzano</span><strong>R$ '+(k.preco_medio_suzano||0).toFixed(2).replace(".",",")+'</strong></div><div class="prt"><div class="prf" style="width:'+(k.preco_medio_suzano/mx*100).toFixed(1)+'%;background:#4CAF50"></div></div></div>';
+}
+
+function embTexto(p){
+var r=p.qtd_resmas||1;
+var f=p.qtd_folhas||500;
+var tipo="Resma";
+if(r>=10) tipo="Caixa";
+else if(r>=5) tipo="Kit "+r+"x";
+else if(r>=2) tipo="Pacote "+r+"x";
+return '<span class="emb">'+tipo+'</span><div class="emb-detalhe">'+r+' resma'+(r>1?'s':'')+' | '+f+' fls</div>';
+}
+
+function regTag(reg){
+var cls=reg.toLowerCase().replace("-","");
+if(cls==="centrooeste") cls="centro-oeste";
+return '<span class="reg-tag '+cls+'">'+reg+'</span>';
+}
+
+function faixasPreco(p){
+var sku=p.sku;
+var conc=p.concorrente;
+var todos=D.produtos.filter(function(x){return x.sku===sku && x.concorrente===conc && x.preco_mercado>0});
+if(todos.length<=1) return '<span class="faixa-tag normal">Preco unico</span>';
+todos.sort(function(a,b){return a.qtd_resmas-b.qtd_resmas});
+var seen={};
+var html='';
+var precos=todos.map(function(x){return x.preco_mercado});
+var minP=Math.min.apply(null,precos);
+for(var i=0;i<todos.length;i++){
+var t=todos[i];
+var key=t.qtd_resmas+'-'+t.preco_mercado;
+if(seen[key]) continue;
+seen[key]=true;
+var tipo=t.qtd_resmas>=10?"10+":t.qtd_resmas>=5?"5+":t.qtd_resmas>=2?t.qtd_resmas+"un":"1un";
+var cls=t.preco_mercado===minP?"melhor":"normal";
+html+='<span class="faixa-tag '+cls+'">'+tipo+': R$'+t.preco_mercado.toFixed(2).replace(".",",")+'</span>';
+}
+return html||'<span class="faixa-tag normal">Unico</span>';
+}
+
+function ren(p){
+var f=F==="TODOS"?p:p.filter(function(x){return x.farol===F});
+if(!f.length){document.getElementById("tb").innerHTML='<tr><td colspan="9" style="text-align:center;color:#8494A8;padding:2rem">Nenhum produto encontrado</td></tr>';return;}
+document.getElementById("tb").innerHTML=f.map(function(x){
+var dc=x.diferenca>1?"pos":x.diferenca<-1?"neg":"neu";
+var sg=x.diferenca>0?"+":"";
+var link=x.url?'<a href="'+x.url+'" target="_blank" class="link-conc">'+x.concorrente+' &#8599;</a>':'<span style="color:#4CAF50;font-size:.65rem;font-family:monospace">'+x.concorrente+'</span>';
+return '<tr><td><div class="pn" title="'+x.produto+'">'+x.produto+'</div><div class="ps">'+x.sku+'</div></td><td>'+embTexto(x)+'</td><td>'+faixasPreco(x)+'</td><td>'+link+'</td><td>'+regTag(x.regional)+'</td><td class="mono">R$'+x.preco_mercado.toFixed(2).replace(".",",")+'</td><td class="mono">R$'+x.preco_suzano.toFixed(2).replace(".",",")+'</td><td><span class="d '+dc+'">'+sg+x.diferenca.toFixed(1)+'%</span></td><td><span class="f '+x.farol+'"><span class="fd"></span>'+x.farol+'</span></td></tr>';
+}).join("");
+}
+
+function fil(t){F=t;document.querySelectorAll(".fbtn").forEach(function(b){b.classList.remove("on")});event.target.classList.add("on");ren(produtosAtivos);}
+
+function renderHistorico(){
+var h=D.historico;
+if(!h||!h.length){
+document.querySelector(".chart-container").innerHTML='<div style="text-align:center;padding:3rem;color:#8494A8">Historico aparecera aqui conforme o robo coletar dados diariamente.<br>Cada dia de coleta adiciona um ponto ao grafico.</div>';
+return;
+}
+var ctx=document.getElementById("histChart").getContext("2d");
+new Chart(ctx,{
+type:"line",
+data:{
+labels:h.map(function(x){return x.data}),
+datasets:[
+{label:"Preco Medio",data:h.map(function(x){return x.media}),borderColor:"#4CAF50",backgroundColor:"rgba(76,175,80,.1)",fill:true,tension:.3,pointRadius:4,pointBackgroundColor:"#4CAF50",borderWidth:2},
+{label:"Preco Minimo",data:h.map(function(x){return x.minimo}),borderColor:"#64B5F6",backgroundColor:"transparent",borderDash:[5,5],tension:.3,pointRadius:3,pointBackgroundColor:"#64B5F6",borderWidth:1.5},
+{label:"Preco Maximo",data:h.map(function(x){return x.maximo}),borderColor:"#EF9A9A",backgroundColor:"transparent",borderDash:[5,5],tension:.3,pointRadius:3,pointBackgroundColor:"#EF9A9A",borderWidth:1.5}
+]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{legend:{labels:{color:"#8494A8",font:{size:11}}}},
+scales:{
+x:{grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8494A8",font:{size:10}}},
+y:{grid:{color:"rgba(255,255,255,.05)"},ticks:{color:"#8494A8",font:{size:10},callback:function(v){return "R$ "+v.toFixed(2)}}}
+}
+}
+});
+}
+
+init();
+</script>
+</body>
+</html>
