@@ -59,7 +59,16 @@ var F="TODOS",PA=D.produtos,emailsList=[];
 var UFS_LIST=["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 var REGIOES={"Brasil":["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"],"Norte":["AC","AM","AP","PA","RO","RR","TO"],"Nordeste":["AL","BA","CE","MA","PB","PE","PI","RN","SE"],"Centro-Oeste":["DF","GO","MS","MT"],"Sudeste":["ES","MG","RJ","SP"],"Sul":["PR","RS","SC"]};
 
-function pCampos(){var s=document.getElementById("s-prod"),o=s.options[s.selectedIndex];if(!o.value)return;document.getElementById("s-fmt").value=o.getAttribute("data-f")||"";document.getElementById("s-gram").value=o.getAttribute("data-g")||"";document.getElementById("s-cor").value=o.getAttribute("data-c")||"";document.getElementById("s-marca").value="";pesquisar();}
+function pCampos(){
+  var s=document.getElementById("s-prod");
+  var o=s.options[s.selectedIndex];
+  if(!o.value)return;
+  document.getElementById("s-fmt").value=o.getAttribute("data-f")||"";
+  document.getElementById("s-gram").value=o.getAttribute("data-g")||"";
+  document.getElementById("s-cor").value=o.getAttribute("data-c")||"";
+  document.getElementById("s-marca").value=o.getAttribute("data-m")||"";
+  pesquisar();
+}
 function te(r){r=parseFloat(r)||1;if(r>=10)return'caixa';if(r>=2)return'pacote';return'resma';}
 
 
@@ -189,7 +198,7 @@ function pesquisar(){
     if(fmt&&p.sku.indexOf(fmt)<0)return false;
     if(gram&&p.sku.indexOf(gram)<0)return false;
     if(cor){var cb=cor==="natural"?"reciclado":(cor!=="branco"&&cor!=="reciclado"?"colorido":cor);if(p.sku.indexOf(cb)<0&&p.sku.indexOf(cor)<0)return false;}
-    if(marca&&marca!=="nan"&&marca!==""){var MMAP={"report":["report"],"chamex":["chamex","chamequinho"],"hp":["hp"],"senninha":["senninha","chamequinho"],"bluecup":["bluecup"],"allmax":["allmax"],"copimax":["copimax"],"magnum":["magnum"],"navigator":["navigator"],"reciclato":["reciclato"],"xerox":["xerox"]};var ms=MMAP[marca.toLowerCase()]||[marca.toLowerCase()];var tl=p.produto.toLowerCase(),sk=p.sku.toLowerCase(),tm=false;for(var i=0;i<ms.length;i++){if(tl.indexOf(ms[i])>=0||sk.indexOf(ms[i])>=0){tm=true;break;}}if(!tm)return false;}
+    if(marca&&marca!=="nan"&&marca!==""){var MMAP={"report":["report"],"chamex":["chamex"],"hp":["hp ","hp paper","hp office","hp premium"],"senninha":["senninha","chamequinho"],"bluecup":["bluecup","blue cup"],"allmax":["allmax"],"copimax":["copimax"],"magnum":["magnum"],"navigator":["navigator"],"reciclato":["reciclato","recicle"],"xerox":["xerox"],"one":["one paper"],"eclipse":["eclipse"],"ovella":["ovella"],"dimerc":["dimerc"],"blizzard":["blizzard"],"aro":["aro "],"artwork":["artwork"]};var ms=MMAP[marca.toLowerCase()]||[marca.toLowerCase()];var tl=p.produto.toLowerCase(),sk=p.sku.toLowerCase(),tm=false;for(var i=0;i<ms.length;i++){if(tl.indexOf(ms[i])>=0||sk.indexOf(ms[i])>=0){tm=true;break;}}if(!tm)return false;}
     if(emb&&te(p.qtd_resmas)!==emb)return false;
     // Sanity: descarta se preco_mercado > R$45
     if(p.preco_mercado>45)return false;
